@@ -1,0 +1,204 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Patient Dashboard</title>
+    <link rel="stylesheet" href="{% static 'css/patient_dashboard.css' %}">
+</head>
+<body>
+
+<header class="patient-navbar">
+    <div class="nav-left">
+        <div class="nav-logo">
+            <span class="pulse">~</span>
+            <span class="medical">Medical</span>
+            <span class="clinic">Clinic</span>
+        </div>
+        <div class="nav-subtitle">Exams & Diagnostics</div>
+    </div>
+    <div class="nav-center">
+    <a href="{% url 'book_appointment' %}">📅 Book Appointments</a>
+    <a href="{% url 'past_appointments' %}">📅⏳ Appointments</a>    
+    </div>
+
+    <div class="nav-right">
+        <a href="{% url 'logout_patient' %}" class="logout-btn">🚪 Logout</a>
+    </div>
+</header>
+
+<div class="patient-wrapper">
+
+    <!-- LEFT PROFILE BAR -->
+    <aside class="profile-bar">
+        <div class="profile-header">
+    <div class="profile-img-wrapper">
+     {% if patient.image %}
+    <img src="{{ patient.image.url }}" class="profile-img">
+    {% else %}
+     <img src="{% static 'images/default-user.png' %}" class="profile-img">
+     {% endif %}
+    </div>
+
+    <h3 class="patient-name">{{ patient.name }}</h3>
+
+    <div class="patient-meta">
+        <span>🎂 {{ patient.age }} yrs</span>
+        <span>⚧ {{ patient.gender }}</span>
+    </div>
+
+    <div class="patient-contact">
+        📞 {{ patient.contact }}
+     </div>
+    </div>
+        <a href="{% url 'patient_dashboard' %}">🏠 Dashboard</a>
+        <a href="{% url 'notifications' %}">🔔 Notifications</a>
+        <a href="{% url 'medical_reports' %}">📄 Medical Reports</a>
+        <a href="{% url 'live_chat' %}">💬 Live Chat</a>
+        <a href="{% url 'video_call' %}">🎥 Video Call</a>
+        <a href="{% url 'medical_progress' %}">📊 Health Progress</a>
+        <a href="{% url 'medical_health' %}">🥗 Medical Health</a>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="patient-content">
+
+        {% if messages %}
+        <div class="patient-messages" id="flash-messages">
+            {% for message in messages %}
+                <div class="msg {{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+
+        {% if section == 'dashboard' %}
+         <div class="content-card">
+        <h2>Welcome {{ patient.name }} 👋</h2>  <br>
+        <p>We Hope You Are In Good Health & Happyness</p>
+        </div>
+
+        {% elif section == 'book' %}
+        <div class="content-card">
+         <h2>Book Appointment</h2>
+
+<!-- SEARCH BAR -->
+        <form method="get" class="doctor-search">
+     <input
+        type="text"
+        name="q"
+        placeholder="Search doctor by name / specialization..."
+        value="{{ query }}" >
+    <button type="submit">🔍 Search</button>
+        </form>
+
+<!-- DOCTOR LIST -->
+      <div class="doctor-grid">
+     {% for d in doctors %}
+     <div class="doctor-card">
+
+        <div class="doctor-img">
+            {% if d.image %}
+                <img src="{{ d.image.url }}">
+            {% else %}
+                <img src="{% static 'images/default-user.png' %}">
+            {% endif %}
+        </div>
+
+        <h3>{{ d.name }}</h3>
+        <p class="spec">Doctor of {{ d.specialization }}</p>
+        <p class="exp">🧠 {{ d.experience }} Years Experience</p>
+         <p class="tagline">
+            {% if d.specialization == "Cardiologist" %}
+                ❤️ Doctor of Heart
+            {% elif d.specialization == "Dermatologist" %}
+                🧴 Skin Specialist
+            {% elif d.specialization == "Orthopaedics" %}
+                🦴 Bone & Joint Expert
+            {% else %}
+                🩺 Medical Specialist
+            {% endif %}  </p>
+        <p class="about">
+            {{ d.about|truncatewords:18 }}
+        </p>
+
+        <a href="#" class="book-btn">📅 Book Now</a>
+
+    </div>
+     {% empty %}
+        <p>No doctors found.</p>
+     {% endfor %}
+     </div>
+     </div>
+
+
+
+
+
+        {% elif section == 'past' %}
+        <div class="content-card">
+        <h2>Past Appointments</h2>
+        <p>Your completed appointments will appear here.</p>
+        </div>
+
+        {% elif section == 'upcoming' %}
+        <div class="content-card">
+        <h2>Upcoming Appointments</h2>
+        <p>Your scheduled appointments.</p>
+        </div>
+
+        {% elif section == 'reports' %}
+        <div class="content-card">
+        <h2>Medical Reports</h2>
+        <p>Lab reports & prescriptions.</p>
+        </div>
+
+        {% elif section == 'chat' %}
+        <div class="content-card">
+        <h2>Live Chat</h2>
+        <p>Chat with doctor.</p>
+        </div>
+
+        {% elif section == 'video' %}
+        <div class="content-card">
+        <h2>Live Video Call</h2>
+        <p>Start video consultation.</p>
+        </div>
+
+        {% elif section == 'notifications' %}
+        <div class="content-card">
+        <h2>Notifications</h2>
+        <p>Appointment alerts & reminders.</p>
+        </div>
+
+        {% elif section == 'progress' %}
+        <div class="content-card">
+        <h2>Medical Progress</h2>
+        <p>Analytics of your health improvement.</p>
+        </div>
+
+        {% elif section == 'health' %}
+        <div class="content-card">
+        <h2>Medical Health</h2>
+        <ul>
+            <li>🥗 Healthy Diet Plans</li>
+            <li>🏃 Daily Exercise Routines</li>
+            <li>🛌 Sleep Recommendations</li>
+        </ul>
+        </div>
+        {% endif %}
+
+    </main>
+
+</div>
+
+  <script>
+    setTimeout(function () {
+        const messages = document.getElementById("flash-messages");
+        if (messages) {
+            messages.style.opacity = "0";
+            setTimeout(() => messages.remove(), 500); // smooth fade
+        }
+    }, 5000); // 5 seconds
+</script>
+</body>
+</html>
