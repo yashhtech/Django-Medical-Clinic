@@ -64,10 +64,7 @@ urlpatterns = [
 
 
     # urls.py
-    path("book-appointment/",book_appointment, name="book_appointment"),
 
-    path('patient/past-appointments/',past_appointments, name='past_appointments'),
-    path('patient/upcoming-appointments/',upcoming_appointments, name='upcoming_appointments'),
     path('patient/medical-reports/',medical_reports, name='medical_reports'),
     path('patient/live-chat/',live_chat, name='live_chat'),
     path('patient/video-call/',video_call, name='video_call'),

@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from .models import Patient,Contact,Doctor,Newsletter
+from .models import Patient,Contact,Doctor,Newsletter,Appointment
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.hashers import check_password
@@ -10,6 +10,8 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Q
+import calendar
+from datetime import date
 
 def home(request):
     return render(request, 'Nav-tab/index.html')
@@ -106,28 +108,6 @@ def new_patient_register(request):
             return redirect("login")
 
     return redirect("login")
-
-
-
-# def patient_login(request):
-#     if request.method == "POST":
-#         email = request.POST.get("email")
-#         password = request.POST.get("password")
-
-#         try:
-#             patient = Patient.objects.get(email=email)
-
-#             if check_password(password, patient.password):
-#                 request.session["patient_id"] = patient.id
-#                 messages.success(request, "Login successful")
-#                 return redirect("patient_dashboard")
-#             else:
-#                 messages.error(request, "Invalid password")
-
-#         except Patient.DoesNotExist:
-#             messages.error(request, "Email not registered")
-
-#     return redirect("login")
 
 
 
@@ -425,62 +405,175 @@ def custom_logout(request):
     logout(request)
     return redirect('home')
 
-
+#================================================PATIENT DASHBOARD ============================================
 
 def patient_dashboard(request):
-    patient_id = request.session.get("patient_id")
-
-    if not patient_id:
-        return redirect("login")   # login page
-
-    patient = Patient.objects.get(id=patient_id)
-
-    return render(request, "dashboard/patient_dashboard.html", {
-        "patient": patient ,
-        'section': 'dashboard'
-    })
-
-def book_appointment(request):
     patient_id = request.session.get("patient_id")
     if not patient_id:
         return redirect("login")
 
     patient = Patient.objects.get(id=patient_id)
 
+    # ================= URL PARAMS =================
+    page = request.GET.get("page", "dashboard")
+    specialization = request.GET.get("specialization")
     query = request.GET.get("q", "")
+    doctor_id = request.GET.get("doctor_id")
 
-    doctors = Doctor.objects.all()
+    # ================= DEFAULTS =================
+    section = page
+    doctors = Doctor.objects.none()
+    doctor = None
+    selected_date = None
+    selected_time = None
 
-    if query:
-        doctors = doctors.filter(
+    context = {
+        "patient": patient,
+        "section": section,
+        "query": query,
+        "selected_specialization": specialization,
+    }
+
+    # =================================================
+    # 1️⃣ DASHBOARD
+    # =================================================
+    if page == "dashboard":
+        return render(request, "dashboard/patient_dashboard.html", context)
+
+    # =================================================
+    # 2️⃣ BOOK APPOINTMENT (DOCTOR LIST)
+    # =================================================
+    elif page == "book":
+        doctors = Doctor.objects.all()
+
+        if query:
+            doctors = doctors.filter(
             Q(name__icontains=query) |
             Q(specialization__icontains=query) |
-            Q(about__icontains=query)
-        )
+            Q(qualification__icontains=query) |
+            Q(bio__icontains=query) |
+            Q(experience__icontains=query)
+        ).distinct()
 
-    return render(request, "dashboard/patient_dashboard.html", {
-        "patient": patient,
+        context.update({
         "section": "book",
         "doctors": doctors,
-        "query": query
+        "query": query,
     })
+        return render(request, "dashboard/patient_dashboard.html", context)
 
+    # =================================================
+    # 3️⃣ SPECIALIZATION FILTER
+    # =================================================
+    elif specialization:
+        doctors = Doctor.objects.filter(specialization=specialization)
 
+        context.update({
+            "section": "specialization",
+            "doctors": doctors,
+            "selected_specialization": specialization,
+        })
+        return render(request, "dashboard/patient_dashboard.html", context)
 
-def past_appointments(request):
-    patient = Patient.objects.get(user=request.user)
-    return render(request, 'dashboard/patient_dashboard.html', {
-        'patient': patient,
-        'section': 'past'
-    })
+    # =================================================
+    # 4️⃣ SCHEDULE PAGE
+    # =================================================
+    elif page == "schedule" and doctor_id:
+        doctor = Doctor.objects.get(id=doctor_id)
 
+        today = date.today()
+        month = int(request.GET.get("month", today.month))
+        year = int(request.GET.get("year", today.year))
 
-def upcoming_appointments(request):
-    patient = Patient.objects.get(user=request.user)
-    return render(request, 'dashboard/patient_dashboard.html', {
-        'patient': patient,
-        'section': 'upcoming'
-    })
+        if month < 1:
+            month = 12
+            year -= 1
+        elif month > 12:
+            month = 1
+            year += 1
+
+        cal = calendar.Calendar(calendar.SUNDAY)
+        month_days = cal.monthdayscalendar(year, month)
+
+        selected_date = request.POST.get("date") or request.GET.get("date")
+        selected_time = request.POST.get("time")
+
+        time_slots = [
+            "12:00 am", "12:30 am",
+            "1:00 am", "1:30 am",
+            "2:00 am", "2:30 am",
+            "3:00 am", "3:30 am",
+            "4:00 am", "4:30 am",
+        ]
+
+        context.update({
+            "section": "schedule",
+            "doctor": doctor,
+            "month": month,
+            "year": year,
+            "month_name": calendar.month_name[month],
+            "month_days": month_days,
+            "time_slots": time_slots,
+            "selected_date": selected_date,
+            "selected_time": selected_time,
+        })
+        return render(request, "dashboard/patient_dashboard.html", context)
+
+    # =================================================
+    # 5️⃣ BOOKING CONFIRM PAGE
+    # =================================================
+    elif page == "booking" and doctor_id:
+        doctor = Doctor.objects.get(id=doctor_id)
+        selected_date = request.GET.get("date")
+        selected_time = request.GET.get("time")
+
+        if request.method == "POST":
+            Appointment.objects.create(
+                patient=patient,
+                doctor=doctor,
+                date=selected_date,
+                time=selected_time,
+                first_name=request.POST.get("first_name"),
+                last_name=request.POST.get("last_name"),
+                email=request.POST.get("email"),
+                phone=request.POST.get("phone"),
+                message=request.POST.get("text"),
+                amount=300,
+                status="Confirmed"
+            )
+
+            send_auto_reply(
+                email=patient.email,
+                subject="Appointment Confirmed - Medical Clinic",
+                message=f"""
+                Hello {patient.name},
+
+                Your appointment has been confirmed.
+
+                Doctor: {doctor.name}
+                Date: {selected_date}
+                Time: {selected_time}
+
+                Thank you!
+                """
+            )
+
+            messages.success(request, "Appointment booked successfully ✅")
+            return redirect("patient_dashboard")
+
+        context.update({
+            "section": "booking",
+            "doctor": doctor,
+            "selected_date": selected_date,
+            "selected_time": selected_time,
+        })
+        return render(request, "dashboard/patient_dashboard.html", context)
+
+    # =================================================
+    # FALLBACK
+    # =================================================
+    return render(request, "dashboard/patient_dashboard.html", context)
+
 
 
 def medical_reports(request):

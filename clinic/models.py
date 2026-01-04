@@ -63,3 +63,38 @@ class Doctor(models.Model):
     def __str__(self):
         return self.name
 
+
+
+
+
+class Appointment(models.Model):
+    patient = models.ForeignKey(
+        "clinic.Patient",
+        on_delete=models.CASCADE,
+        related_name="appointments"
+    )
+    doctor = models.ForeignKey(
+        "clinic.Doctor",
+        on_delete=models.CASCADE,
+        related_name="appointments"
+    )
+
+    date = models.DateField()
+    time = models.CharField(max_length=20)
+
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone = models.CharField(max_length=15, blank=True)
+    message = models.TextField(blank=True)
+
+    amount = models.IntegerField(default=300)
+    status = models.CharField(
+        max_length=20,
+        default="Confirmed"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.patient} → {self.doctor} ({self.date} {self.time})"

@@ -17,8 +17,26 @@
         <div class="nav-subtitle">Exams & Diagnostics</div>
     </div>
     <div class="nav-center">
-    <a href="{% url 'book_appointment' %}">📅 Book Appointments</a>
-    <a href="{% url 'past_appointments' %}">📅⏳ Appointments</a>    
+    <a href="{% url 'patient_dashboard' %}?page=book">📅 Book Appointments</a>
+    <a href="{% url 'patient_dashboard' %}?page=appointments">📅⏳ Appointments</a>    
+     <div class="nav-dropdown">
+        <a href="#" class="dropdown-btn">🩺 Specialization ▾</a>
+
+        <div class="dropdown-menu">
+    <a href="{% url 'patient_dashboard' %}?page=specialization&specialization=Cardiologist">❤️ Cardiologist</a>
+    <a href="{% url 'patient_dashboard' %}?page=specialization&specialization=Dermatologist">🧴 Dermatologist</a>
+    <a href="{% url 'patient_dashboard' %}?page=specialization&specialization=Orthopaedics">🦴 Orthopaedics</a>
+    <a href="{% url 'patient_dashboard' %}?page=specialization&specialization=Pediatrician">👶 Pediatrician</a>
+    <a href="{% url 'patient_dashboard' %}?page=specialization&specialization=Opthalmologist">👁️ Opthalmologist</a>
+    <a href="{% url 'patient_dashboard' %}?page=specialization&specialization=Dentist">🦷 Dentist</a>
+    <a href="{% url 'patient_dashboard' %}?page=specialization&specialization=Nephrologist">🧬 Nephrologist</a>
+    <a href="{% url 'patient_dashboard' %}?page=specialization&specialization=Surgeon">🔪 Surgeon</a>
+    <a href="{% url 'patient_dashboard' %}?page=specialization&specialization=Oncologist">🎗️ Oncologist</a>
+    <a href="{% url 'patient_dashboard' %}?page=specialization&specialization=Psychiatrist">🧠 Psychiatrist</a>
+    <a href="{% url 'patient_dashboard' %}?page=specialization&specialization=Gynaecologist">🤰 Gynaecologist</a>
+</div>
+
+    </div>
     </div>
 
     <div class="nav-right">
@@ -82,12 +100,13 @@
          <h2>Book Appointment</h2>
 
 <!-- SEARCH BAR -->
-        <form method="get" class="doctor-search">
+        <form method="get" class="doctor-search" action="{% url 'patient_dashboard' %}">
+          <input type="hidden" name="page" value="book">
      <input
         type="text"
         name="q"
         placeholder="Search doctor by name / specialization..."
-        value="{{ query }}" >
+        value="{{ query|default:'' }}" >
     <button type="submit">🔍 Search</button>
         </form>
 
@@ -114,14 +133,43 @@
                 🧴 Skin Specialist
             {% elif d.specialization == "Orthopaedics" %}
                 🦴 Bone & Joint Expert
+            {% elif d.specialization == "Pediatrician" %}
+                🧒 Doctor of Child
+            {% elif d.specialization == "Opthalmologist" %}
+                👀 Eyes Specialist
+            {% elif d.specialization == "Dentist" %}
+                🦷 Teeth & Dental Expert
+            {% elif d.specialization == "Nephrologist" %}
+                👩‍⚕️ Kidney Specialist
+            {% elif d.specialization == "Surgeon" %}
+                💉 Doctor of Surgery
+            {% elif d.specialization == "Oncologist" %}
+                👩‍⚕️ Doctor Of Cancer
+            {% elif d.specialization == "Psychiatrist" %}
+                🧠 Doctor of Mind
+            {% elif d.specialization == "Hepatologist" %}
+                🏥 Liver Specialist
+            {% elif d.specialization == "Gynaecologist" %}
+                👩🏻 Doctor of Women
+            {% elif d.specialization == "Gastroenterologists" %}
+                👨🏻‍⚕️ Doctor of Stomach
+            {% elif d.specialization == "Otolaryngologist" %}
+                👂 Ear Specialist
+            {% elif d.specialization == "Pulononologist" %}
+               🫁  Doctor of Lungs
             {% else %}
                 🩺 Medical Specialist
             {% endif %}  </p>
         <p class="about">
-            {{ d.about|truncatewords:18 }}
+            {{ d.bio|truncatewords:18 }}
         </p>
 
-        <a href="#" class="book-btn">📅 Book Now</a>
+        <a href="{% url 'patient_dashboard' %}?page=schedule&doctor_id={{ d.id }}"
+         class="book-btn">
+         📅 Book Now
+           </a>
+
+
 
     </div>
      {% empty %}
@@ -129,21 +177,56 @@
      {% endfor %}
      </div>
      </div>
+               
+<!--=====================>>>SPECIALIZATION<<<<================ -->
+            {% elif section == 'specialization' %}
+
+             <div class="content-card">
+              <h2>
+             🩺 {{ selected_specialization }} Doctors Available
+             </h2>
+
+             <div class="doctor-grid">
+             {% for d in doctors %}
+             <div class="doctor-card">
+
+             <div class="doctor-img">
+                {% if d.image %}
+                    <img src="{{ d.image.url }}">
+                {% else %}
+                    <img src="{% static 'images/default-user.png' %}">
+                {% endif %}
+              </div>
+
+              <h3>{{ d.name }}</h3>
+              <p class="spec">Doctor of {{ d.specialization }}</p>
+             <p class="exp">🧠 {{ d.experience }} Years Experience</p>
+
+             <p class="about">
+                {{ d.bio|truncatewords:18 }}
+             </p>
+
+             <a href="{% url 'patient_dashboard' %}?page=schedule&doctor_id={{ d.id }}"
+               class="book-btn">
+             📅 Book Now
+              </a>
+
+
+             </div>
+               {% empty %}
+              <p>No doctors available for this specialization.</p>
+             {% endfor %}
+              </div>
+             </div>
 
 
 
 
 
-        {% elif section == 'past' %}
+        {% elif section == 'appointments' %}
         <div class="content-card">
-        <h2>Past Appointments</h2>
+        <h2>Your Appointments</h2>
         <p>Your completed appointments will appear here.</p>
-        </div>
-
-        {% elif section == 'upcoming' %}
-        <div class="content-card">
-        <h2>Upcoming Appointments</h2>
-        <p>Your scheduled appointments.</p>
         </div>
 
         {% elif section == 'reports' %}
@@ -185,8 +268,199 @@
             <li>🛌 Sleep Recommendations</li>
         </ul>
         </div>
-        {% endif %}
 
+{% elif section == "schedule" %}
+
+<div class="schedule-page-wrapper">
+
+    <a href="{% url 'patient_dashboard' %}?page=book" class="back-link" style="color: red; font-weight: bolder;">← Back</a>
+         <h1 class="page-title" style="color: aliceblue; font-weight: bolder;">Schedule your service</h1>
+         <p class="page-subtitle" style="color: aliceblue; font-weight: bolder;">Check out our availability and book the date and time that works for you</p>
+
+           <div class="schedule-card">
+
+    <!-- LEFT : CALENDAR -->
+          <div class="calendar-box">
+           <h3>Select a Date and Time</h3>
+
+            <div class="month-header">
+              <a href="?page=schedule&doctor_id={{ doctor.id }}&month={{ month|add:-1 }}&year={{ year }}">‹</a>
+               <strong>{{ month_name }}/{{ year }}</strong>
+                <a href="?page=schedule&doctor_id={{ doctor.id }}&month={{ month|add:1 }}&year={{ year }}">›</a>
+              </div>
+
+              <div class="weekdays">
+               <span>Sun</span><span>Mon</span><span>Tue</span>
+                 <span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+               </div>
+
+           <div class="calendar-grid">
+{% for week in month_days %}
+    {% for day in week %}
+        {% if day == 0 %}
+            <span class="empty"></span>
+        {% else %}
+            {# Build YYYY-MM-DD string for this day #}
+            {% with year|stringformat:"s" as y %}
+            {% with month|stringformat:"02d" as m %}
+            {% with day|stringformat:"02d" as d %}
+                {% with y|add:"-"|add:m|add:"-"|add:d as day_str %}
+                    <a href="?page=schedule&doctor_id={{ doctor.id }}&date={{ day_str }}"
+                       class="day-btn {% if selected_date == day_str %}selected{% endif %}">
+                        {{ day }}
+                    </a>
+                {% endwith %}
+            {% endwith %}
+            {% endwith %}
+            {% endwith %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+</div>
+
+
+        </div>
+
+              <!-- MIDDLE : TIME SLOTS -->
+              <div class="slot-box">
+                  <h3>Availability</h3>
+
+                 <form method="post">
+                 {% csrf_token %}
+                 <input type="hidden" name="date" value="{{ selected_date }}">
+
+                    <div class="slots">
+                   {% for slot in time_slots %}
+                  <label class="slot">
+                         <input type="radio" name="time" value="{{ slot }}">
+                         {% if slot == selected_time %}checked{% endif %}>
+                      <span>{{ slot }}</span>
+                    </label>
+                    {% endfor %}
+                   </div>
+
+                  <button class="next-btn" type="submit">Next</button>
+
+                  </form>
+                  </div>
+
+              <!-- RIGHT : SERVICE DETAILS -->
+              <div class="service-box">
+              <h3>Service Details</h3>
+              <p><strong>Doctor:</strong> {{ doctor.name }}</p>
+               <p class="service">{{ doctor.specialization }}</p>
+                <p><strong>Date:</strong> {{ selected_date|default:"Not selected" }} 
+                <strong>Time:</strong> {{ selected_time|default:"Not selected" }}</p>
+              <p><strong>Medical Clinic</strong></p>
+             <p><strong>Duration:</strong> 1 Hour</p>
+             <p><strong>Booking Charge:</strong> ₹ 300.00</p>
+
+                {% if selected_date and selected_time %}
+                <a href="{% url 'patient_dashboard' %}?page=booking&doctor_id={{ doctor.id }}&date={{ selected_date }}&time={{ selected_time }}"class="confirm-btn">
+                Confirm Appointment</a>
+                {% else %}
+                <button class="confirm-btn disabled" disabled>
+                Select date & time first
+                </button>
+                {% endif %}
+
+
+
+               </div>
+
+               </div>
+             </div>
+
+            {% elif section == "booking" %}
+
+<div class="booking-wrapper">
+
+    <!-- BACK BUTTON -->
+    <a href="javascript:history.back()" class="back-link">← Back</a>
+
+    <h1 class="booking-title">Booking Form</h1>
+
+    <div class="booking-layout">
+
+        <!-- LEFT : CLIENT DETAILS -->
+        <div class="client-box">
+            <h3>Client Details</h3>
+
+            <p class="login-text">Input Your Details..!!</p>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="row">
+                    <input type="text" name="first_name" placeholder="First name *">
+                    <input type="text" name="last_name" placeholder="Last name *">
+                </div>
+
+                <div class="row">
+                    <input type="email" name="email" placeholder="Email *">
+                    <input type="text" name="phone" placeholder="Phone">
+                </div>
+                <div class="row">
+                        <input type="hidden" name="date" value="{{ selected_date }}">
+                        <input type="hidden" name="time" value="{{ selected_time }}">
+                        <input type="hidden" name="doctor_id" value="{{ doctor.id }}">
+                </div>
+
+                <textarea placeholder="Add your message" name="text"></textarea>
+                 
+        </div>
+
+        <!-- RIGHT : BOOKING DETAILS -->
+        <div class="booking-details-box">
+            <h3>Booking Details</h3>
+
+            <p class="service-name">
+                Consult with {{ doctor.name }}
+            </p>
+
+            <p class="datetime">
+                {{ selected_date }} at {{ selected_time }}
+            </p>
+
+            <p class="specialization">
+                {{ doctor.specialization }}
+            </p>
+
+            <p><strong>Duration:</strong> 1 Hour</p>
+
+            <hr class="purple-line">
+
+            <h4>Payment Details</h4>
+
+            <div class="payment-row">
+                <span>Payment for consult with {{ doctor.name }}</span>
+                <span>₹300</span>
+            </div>
+
+            <div class="payment-row total">
+                <strong>Total</strong>
+                <strong>₹300</strong>
+            </div>
+
+            <p class="notify-text">
+                By completing your booking, you agree to receive
+                appointment notifications via email.
+            </p>
+
+            <button type="submit" class="book-btn">
+                Pay & Confirm
+            </button>
+
+            </form>
+        </div>
+
+    </div>
+</div>
+
+
+
+
+            {% endif %}
     </main>
 
 </div>
