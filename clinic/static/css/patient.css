@@ -447,3 +447,154 @@ body::before {
     color: white;
     text-decoration: none;
 }
+
+
+/* ================= GLOBAL RESPONSIVE HELPERS ================= */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ================= NAVBAR RESPONSIVE ================= */
+
+/* TABLET */
+@media (max-width: 1024px) {
+    .patient-navbar {
+        padding: 0 20px;
+    }
+
+    .nav-logo {
+        font-size: 20px;
+    }
+
+    .logout-btn {
+        padding: 8px 18px;
+        font-size: 13px;
+    }
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+    .patient-navbar {
+        flex-direction: column;
+        height: auto;
+        padding: 12px 15px;
+        gap: 8px;
+        text-align: center;
+    }
+}
+
+/* ================= LAYOUT RESPONSIVE ================= */
+
+@media (max-width: 1024px) {
+    .patient-wrapper {
+        flex-direction: row;
+    }
+
+    .profile-bar {
+        width: 220px;
+    }
+
+    .patient-content {
+        margin-left: 220px;
+        padding: 35px;
+    }
+}
+
+/* ================= SIDEBAR MOBILE FIX ================= */
+
+@media (max-width: 900px) {
+    .profile-bar {
+        position: relative;
+        top: 0;
+        height: auto;
+        width: 100%;
+        flex-direction: row;
+        justify-content: center;
+        gap: 12px;
+        padding: 20px;
+    }
+
+    .profile-header {
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    .profile-bar a {
+        width: auto;
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+
+    .patient-content {
+        margin-left: 0;
+        padding: 30px 20px;
+    }
+}
+
+/* ================= PROFILE IMAGE RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+    .profile-img-wrapper {
+        width: 90px;
+        height: 90px;
+    }
+
+    .patient-name {
+        font-size: 18px;
+    }
+
+    .patient-meta span {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+}
+
+/* ================= CONTENT CARDS RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+    .patient-content > * {
+        padding: 18px;
+    }
+
+    .patient-content h2,
+    .patient-content p {
+        font-size: 15px;
+    }
+}
+
+/* ================= DOCTOR SECTION RESPONSIVE ================= */
+
+@media (max-width: 1024px) {
+    .patient-content .doctor-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .patient-content .doctor-search {
+        flex-direction: column;
+        max-width: 100%;
+    }
+
+    .patient-content .doctor-search button {
+        width: 100%;
+    }
+
+    .patient-content .doctor-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+
+    .patient-content .doctor-card {
+        padding: 12px;
+    }
+}
+
+/* ================= MESSAGE RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+    .msg {
+        font-size: 13px;
+        padding: 10px 14px;
+    }
+}

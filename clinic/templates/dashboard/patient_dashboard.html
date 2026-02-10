@@ -64,9 +64,9 @@
         <span>⚧ {{ patient.gender }}</span>
     </div>
 
-    <div class="patient-contact">
+    {% comment %} <div class="patient-contact">
         📞 {{ patient.contact }}
-     </div>
+     </div> {% endcomment %}
     </div>
         <a href="{% url 'patient_dashboard' %}">🏠 Dashboard</a>
         <a href="{% url 'notifications' %}">🔔 Notifications</a>

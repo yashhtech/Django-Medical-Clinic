@@ -94,3 +94,107 @@
         align-items: center;
     }
 }       
+
+/* =====================================================
+   TABLET (<= 1024px)
+===================================================== */
+@media (max-width: 1024px) {
+
+    .depart-hero {
+        height: 240px;
+    }
+
+    .depart-hero h1 {
+        font-size: 40px;
+    }
+
+    .depart-hero-overlay {
+        padding-left: 40px;
+    }
+
+    .departments {
+        gap: 30px;
+        padding: 60px 40px;
+    }
+
+    .dept-card {
+        width: 300px;
+    }
+}
+
+/* =====================================================
+   TABLET & SMALL DEVICES (<= 768px)
+===================================================== */
+@media (max-width: 768px) {
+
+    .depart-hero {
+        height: 220px;
+    }
+
+    .depart-hero h1 {
+        font-size: 34px;
+    }
+
+    .depart-hero-overlay {
+        padding-left: 30px;
+    }
+
+    .departments {
+        flex-direction: column;
+        align-items: center;
+        padding: 50px 30px;
+    }
+
+    .dept-card {
+        width: 90%;
+        max-width: 360px;
+    }
+
+    .dept-card h3 {
+        font-size: 20px;
+        text-align: center;
+    }
+
+    .dept-card p {
+        text-align: center;
+        font-size: 15px;
+    }
+}
+
+/* =====================================================
+   MOBILE (<= 480px)
+===================================================== */
+@media (max-width: 480px) {
+
+    .depart-hero {
+        height: 190px;
+    }
+
+    .depart-hero h1 {
+        font-size: 26px;
+        text-align: center;
+    }
+
+    .depart-hero-overlay {
+        padding-left: 0;
+        padding: 0 16px;
+        text-align: center;
+    }
+
+    .departments {
+        padding: 40px 16px;
+        gap: 24px;
+    }
+
+    .dept-card {
+        width: 100%;
+    }
+
+    .dept-card h3 {
+        font-size: 18px;
+    }
+
+    .dept-card p {
+        font-size: 14px;
+    }
+}

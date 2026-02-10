@@ -32,6 +32,11 @@
         <a href="?page=notifications">🔔</a>
 
     </div>
+
+    <div class="mobile-actions">
+    <span class="menu-toggle">☰</span>
+    <span class="profile-toggle">👤</span>
+</div>
 </nav>
 
 <div class="doctor-wrapper">
@@ -55,30 +60,37 @@
         </div>
         {% endif %}
 
- {% if not doctor.is_profile_completed %}
+{% if not doctor.is_profile_completed and not request.session.skip_profile %}
 
 <div class="form-card">
     <h2 class="dashboard-title">Complete Your Profile</h2>
 
     <form class="doctor-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
+
         <textarea name="bio" placeholder="Professional Bio"></textarea>
         <input type="text" name="qualification" placeholder="Qualification">
         <input type="text" name="hobbies" placeholder="Hobbies">
         <input type="file" name="image">
-        <button type="submit">Save Profile</button>
+
+        <div class="form-actions">
+            <button type="submit">Save Profile</button>
+
+            <!-- ✅ SKIP BUTTON -->
+         <a href="?page=home&skip=true" class="skip-btn">Skip for now</a>
+        </div>
     </form>
 </div>
 
-
 {% else %}
-   
-        {% if page == "home" %}
-            <h2>Welcome Dr. {{ doctor.name }}</h2>
-            <p>Specialization: {{ doctor.specialization }}</p>
-        {% endif %}
+
+    {% if page == "home" %}
+        <h2>Welcome Dr. {{ doctor.name }}</h2>
+        <p>Specialization: {{ doctor.specialization }}</p>
+    {% endif %}
 
 {% endif %}
+
 
 {% if page == "appointments" %}
 
@@ -200,7 +212,7 @@
 {% endif %}
 
 
-        {% if page == "edit_profile" %}
+ {% if page == "edit_profile" %}
 
 <div class="form-card">
     <h2 class="dashboard-title">Edit Profile</h2>
@@ -208,8 +220,8 @@
     <form class="doctor-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <textarea name="bio">{{ doctor.bio }}</textarea>
-        <input type="text" name="qualification" value="{{ doctor.qualification }}">
-        <input type="text" name="hobbies" value="{{ doctor.hobbies }}">
+        <input type="text" name="qualification" placeholder=""Qualification value="{{ doctor.qualification }}">
+        <input type="text" name="hobbies" placeholder="Hobbies" value="{{ doctor.hobbies }}">
         <input type="file" name="image">
         <button type="submit">Update Profile</button>
     </form>
@@ -252,10 +264,10 @@
 </div>
 
 <!-- NOTIFICATION PANEL -->
-<div id="notification-panel" class="notification-panel">
+{% comment %} <div id="notification-panel" class="notification-panel">
     <h4>Notifications</h4>
     <p>No new notifications</p>
-</div>
+</div> {% endcomment %}
   
 
 <script>
@@ -277,6 +289,20 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 600);
     }, 5000);
 });
+
+
+
+{% comment %} toogle {% endcomment %}
+
+document.querySelector(".menu-toggle").onclick = () => {
+    document.querySelector(".left-sidebar").classList.toggle("active");
+};
+
+document.querySelector(".profile-toggle").onclick = () => {
+    document.querySelector(".profile-sidebar").classList.toggle("active");
+};
+
+
 </script>
 
 

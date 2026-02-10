@@ -91,3 +91,115 @@
         width: 140px;
     }
 }
+
+
+/* =================================================
+   GLOBAL RESPONSIVE SAFETY
+================================================= */
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* =================================================
+   LARGE DESKTOP (1200px+)
+================================================= */
+@media (min-width: 1200px) {
+    .ins-hero-overlay {
+        padding-left: 60px;
+    }
+}
+
+/* =================================================
+   DESKTOP / LAPTOP
+================================================= */
+@media (max-width: 1199px) {
+    .ins-hero h1 {
+        font-size: 42px;
+    }
+
+    .insurance-section {
+        padding: 70px 40px;
+    }
+}
+
+/* =================================================
+   TABLET (PORTRAIT + LANDSCAPE)
+================================================= */
+@media (max-width: 992px) {
+    .ins-hero {
+        height: 240px;
+    }
+
+    .ins-hero-overlay {
+        padding-left: 40px;
+    }
+
+    .ins-hero h1 {
+        font-size: 36px;
+    }
+
+    .insurance-section h2 {
+        font-size: 28px;
+    }
+
+    .insurance-logos {
+        gap: 40px;
+    }
+}
+
+/* =================================================
+   MOBILE (LARGE)
+================================================= */
+@media (max-width: 768px) {
+    .ins-hero {
+        height: 220px;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .ins-hero-overlay {
+        padding-left: 0;
+    }
+
+    .ins-hero h1 {
+        font-size: 30px;
+    }
+
+    .insurance-section {
+        padding: 60px 20px;
+    }
+
+    .insurance-section h2 {
+        font-size: 26px;
+    }
+
+    .insurance-note {
+        font-size: 14px;
+    }
+}
+
+/* =================================================
+   SMALL MOBILE
+================================================= */
+@media (max-width: 480px) {
+    .ins-hero {
+        height: 200px;
+    }
+
+    .ins-hero h1 {
+        font-size: 24px;
+    }
+
+    .insurance-section h2 {
+        font-size: 22px;
+    }
+
+    .insurance-card {
+        width: 140px;
+    }
+
+    .insurance-card p {
+        font-size: 13px;
+    }
+}

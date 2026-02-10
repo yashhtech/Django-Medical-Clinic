@@ -849,11 +849,16 @@ from django.contrib import messages
 def doctor_dashboard(request):
     if not request.session.get("doctor_id"):
         return redirect("login")
+     # ================= SKIP PROFILE =================
+    if request.GET.get("skip") == "true":
+       request.session["skip_profile"] = True
+
 
     doctor = get_object_or_404(Doctor, id=request.session["doctor_id"])
 
     page = request.GET.get("page", "appointments")
     open_chat_id = request.GET.get("open_chat_id")
+    
 
     # ================= APPOINTMENTS =================
     appointments = Appointment.objects.filter(

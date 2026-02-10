@@ -11,7 +11,9 @@ body {
     font-family: "Segoe UI", Arial, sans-serif;
     background: linear-gradient(120deg, #dff6ff, #eafff2);
     color: #0f172a;
+    overflow-y: auto;   /* ✅ ADD */
 }
+
 
 /* =====================================================
    NAVBAR
@@ -89,8 +91,10 @@ body {
 .doctor-wrapper {
     display: flex;
     margin-top: 80px;
-    height: calc(100vh - 80px);
+    /* height: calc(100vh - 80px); ❌ REMOVE THIS */
+    min-height: calc(100vh - 80px); /* ✅ */
 }
+
 
 /* =====================================================
    LEFT SIDEBAR
@@ -232,6 +236,31 @@ body {
 .doctor-form button:hover {
     box-shadow: 0 8px 20px rgba(0,0,0,0.25);
 }
+
+
+.form-actions{
+    display:flex;
+    gap:14px;
+    align-items:center;
+    margin-top:12px;
+}
+
+.skip-btn{
+    padding:10px 18px;
+    border-radius:12px;
+    background:#e5e7eb;
+    color:#374151;
+    font-size:14px;
+    font-weight:600;
+    text-decoration:none;
+    transition:all 0.3s ease;
+}
+
+.skip-btn:hover{
+    background:#d1d5db;
+    transform:translateY(-1px);
+}
+
 
 /* =====================================================
    RIGHT PROFILE SIDEBAR
@@ -699,6 +728,9 @@ body {
     background: #f3f4f6;
 }
 
+
+
+
 /* Animations */
 @keyframes slideUp {
     from { opacity: 0; transform: translateY(20px); }
@@ -756,6 +788,191 @@ body {
     }
 
     .doctor-content {
-        padding: 20px;
+        width: 100%;
+        flex: none;
+    }
+    .doctor-wrapper {
+        display: block;
+    }
+}
+
+/* =====================================================
+   TABLET (<= 1024px)
+===================================================== */
+@media (max-width: 1024px) {
+    .doctor-wrapper {
+        height: auto;   /* IMPORTANT */
+        min-height: calc(100vh - 80px);
+    }
+
+
+
+    .doctor-content {
+        padding: 24px;
+    }
+
+    .appointments-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+}
+
+/* =====================================================
+   TABLET & SMALL LAPTOP (<= 768px)
+===================================================== */
+@media (max-width: 768px) {
+
+    /* Navbar */
+    .doctor-navbar {
+        height: auto;
+        flex-wrap: wrap;
+        padding: 14px 18px;
+    }
+
+    .nav-links {
+        flex-wrap: wrap;
+        gap: 14px;
+        justify-content: center;
+        margin-top: 8px;
+    }
+
+    /* Content */
+    .doctor-content {
+        padding: 18px;
+    }
+
+    .form-card {
+        padding: 22px;
+    }
+
+    /* Appointment Cards */
+    .appointments-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .appointment-card {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .appointment-meta {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* =====================================================
+   MOBILE (<= 480px)
+===================================================== */
+@media (max-width: 480px) {
+
+    /* Navbar text */
+    .nav-logo {
+        font-size: 18px;
+    }
+
+    .nav-subtitle {
+        font-size: 10px;
+    }
+
+    .nav-links a,
+    .nav-actions a {
+        font-size: 13px;
+    }
+
+    /* Content */
+    .dashboard-title,
+    .section-title {
+        font-size: 18px;
+        text-align: center;
+    }
+
+    .doctor-content p {
+        font-size: 13px;
+        text-align: center;
+    }
+
+    /* Forms */
+    .doctor-form button {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Appointment avatar */
+    .patient-avatar img {
+        width: 70px;
+        height: 70px;
+    }
+
+    /* Chat */
+    .chat-wrapper {
+        height: 60vh;
+        margin: 16px 8px;
+    }
+
+    .chat-header h3 {
+        font-size: 16px;
+    }
+
+    .msg {
+        max-width: 85%;
+        font-size: 13px;
+    }
+}
+
+/* =========================
+   MOBILE TOGGLE BUTTONS
+========================= */
+.mobile-actions {
+    display: none;
+    gap: 16px;
+    font-size: 22px;
+    cursor: pointer;
+    color: #ffffff;
+}
+
+@media (max-width: 992px) {
+    .mobile-actions {
+        display: flex;
+        align-items: center;
+    }
+}
+
+
+/* =========================
+   MOBILE DRAWERS
+========================= */
+@media (max-width: 992px) {
+
+    .left-sidebar,
+    .profile-sidebar {
+        position: fixed;
+        top: 80px;
+        height: calc(100vh - 80px);
+        z-index: 2000;
+        overflow-y: auto;
+        transition: transform 0.35s ease;
+    }
+
+    /* Left menu */
+    .left-sidebar {
+        left: 0;
+        transform: translateX(-100%);
+    }
+
+    .left-sidebar.active {
+        transform: translateX(0);
+    }
+
+    /* Right profile */
+    .profile-sidebar {
+        right: 0;
+        transform: translateX(100%);
+        width: 280px;
+        display: block;
+    }
+
+    .profile-sidebar.active {
+        transform: translateX(0);
     }
 }

@@ -117,3 +117,119 @@
     animation-play-state: paused;
 } */
 
+
+/* =================================
+   LARGE DESKTOP (<= 1200px)
+================================= */
+@media (max-width: 1200px) {
+    .about-clinic {
+        gap: 40px;
+        padding: 70px 20px;
+    }
+
+    .about-left img {
+        width: 420px;
+        max-width: 100%;
+    }
+}
+
+/* =================================
+   LAPTOP / TABLET (<= 992px)
+================================= */
+@media (max-width: 992px) {
+    .about-hero h1 {
+        font-size: 40px;
+    }
+
+    .about-clinic {
+        flex-direction: column;
+        text-align: center;
+        gap: 35px;
+    }
+
+    .about-right h2 {
+        font-size: 30px;
+    }
+
+    .about-left img {
+        width: 100%;
+        max-width: 500px;
+        margin: auto;
+    }
+}
+
+/* =================================
+   TABLET (<= 768px)
+================================= */
+@media (max-width: 768px) {
+    .about-hero {
+        height: 180px;
+        padding-left: 6%;
+    }
+
+    .about-hero h1 {
+        font-size: 32px;
+    }
+
+    .about-clinic {
+        padding: 60px 15px;
+    }
+
+    .about-right h2 {
+        font-size: 26px;
+    }
+
+    .about-right p {
+        font-size: 14px;
+    }
+
+    .doctors {
+        padding: 60px 15px;
+    }
+
+    .doctors h2 {
+        font-size: 28px;
+        margin-bottom: 40px;
+    }
+
+    .doctor-card {
+        min-width: 240px;
+    }
+}
+
+/* =================================
+   MOBILE (<= 480px)
+================================= */
+@media (max-width: 480px) {
+    .about-hero {
+        height: 150px;
+    }
+
+    .about-hero h1 {
+        font-size: 26px;
+    }
+
+    .about-right h2 {
+        font-size: 22px;
+    }
+
+    .about-right p {
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .doctor-card {
+        min-width: 210px;
+        padding: 16px;
+    }
+
+    .doctor-card h3 {
+        font-size: 18px;
+    }
+
+    .doctor-card p {
+        font-size: 14px;
+    }
+}
+
+
