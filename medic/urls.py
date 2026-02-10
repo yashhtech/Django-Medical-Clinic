@@ -37,6 +37,11 @@ urlpatterns = [
     path("new_patient_register/", new_patient_register, name="new_patient_register"),
     path("login/<str:role>/",role_login, name="role_login"),
     path("patient_dashboard/",patient_dashboard, name="patient_dashboard"),
+    path(
+        "cancel-appointment/<int:id>/",
+         cancel_appointment,
+        name="cancel_appointment"
+    ),
     path('logout_patient/', custom_logout, name='logout_patient'),
     path("doctor_dashboard/",doctor_dashboard, name="doctor_dashboard"),
     path("admin/dashboard/", admin_dashboard, name="admin_dashboard"),
@@ -66,7 +71,7 @@ urlpatterns = [
     # urls.py
 
     path('patient/medical-reports/',medical_reports, name='medical_reports'),
-    path('patient/live-chat/',live_chat, name='live_chat'),
+
     path('patient/video-call/',video_call, name='video_call'),
     path('patient/notifications/',notifications, name='notifications'),
     path('patient/progress/',medical_progress, name='medical_progress'),

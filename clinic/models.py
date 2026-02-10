@@ -98,3 +98,39 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"{self.patient} → {self.doctor} ({self.date} {self.time})"
+
+
+class ChatThread(models.Model):
+    appointment = models.OneToOneField(
+        Appointment,
+        on_delete=models.CASCADE,
+        related_name="chat"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"Chat - {self.appointment}"
+
+
+class ChatMessage(models.Model):
+    thread = models.ForeignKey(
+        ChatThread,
+        on_delete=models.CASCADE,
+        related_name="messages"
+    )
+
+    sender = models.CharField(
+        max_length=50,
+        choices=(("doctor", "Doctor"), ("patient", "Patient"))
+    )
+
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+    
+    def __str__(self):
+        return f"{self.sender}: {self.message[:30]}"

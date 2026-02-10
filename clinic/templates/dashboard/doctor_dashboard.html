@@ -78,13 +78,127 @@
             <p>Specialization: {{ doctor.specialization }}</p>
         {% endif %}
 
-        {% if page == "appointments" %}
-            <h2>Appointments</h2>
-        {% endif %}
+{% endif %}
 
-        {% if page == "prescriptions" %}
-            <h2>Prescription Queries</h2>
+{% if page == "appointments" %}
+
+<h2 class="section-title">Upcoming Appointments</h2>
+
+<div class="appointments-grid">
+
+{% for appt in appointments %}
+
+<div class="appointment-card">
+
+    <!-- PATIENT IMAGE -->
+    <div class="patient-avatar">
+        {% if appt.patient.profile_image %}
+            <img src="{{ appt.patient.profile_image.url }}">
+        {% else %}
+            <img src="{% static 'img/default-user.png' %}">
         {% endif %}
+    </div>
+
+    <!-- PATIENT INFO -->
+    <div class="patient-info">
+        <h3>{{ appt.first_name }} {{ appt.last_name }}</h3>
+
+        <p class="meta">
+            <span>{{ appt.patient.gender }}</span>
+            <span>•</span>
+            <span>{{ appt.patient.age }} yrs</span>
+        </p>
+
+        <p class="message">
+            {{ appt.message|default:"No message provided by patient." }}
+        </p>
+
+        <div class="appointment-meta">
+            <span>📅 {{ appt.date }}</span>
+            <span>⏰ {{ appt.time }}</span>
+        </div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="status-box">
+        <span class="status confirmed">{{ appt.status }}</span>
+    </div>
+
+</div>
+
+{% empty %}
+<p>No appointments yet</p>
+
+{% endfor %}
+</div>
+
+{% endif %}
+{% if page == "prescriptions" %}
+<div class="prescription-section">
+    <h2 class="section-title">Prescription Section</h2>
+
+    {% for appt in appointments %}
+    <div class="patient-card">
+    {% if appt.patient.image %}
+    <img src="{{ appt.patient.image.url }}" alt="{{ appt.patient.name }}">
+     {% else %}
+    <img src="{% static 'images/d1.png' %}" alt="Default Patient">
+    {% endif %}
+        <h3>{{ appt.patient.name }}</h3>
+        <p>{{ appt.patient.email }}</p>
+        <p class="appt">📅 {{ appt.date }} | ⏰ {{ appt.time }}</p>
+
+        <a href="{% url 'doctor_dashboard' %}?page=prescriptions&open_chat_id={{ appt.id }}" class="chat-btn">
+            💬 Message
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+{% if chat_appointment %}
+<div class="chat-wrapper">
+    <div class="chat-header">
+        {% load static %}
+
+    {% if chat_appointment.patient.image %}
+    <img src="{{ chat_appointment.patient.image.url }}" alt="{{ chat_appointment.patient.name }}">
+    {% else %}
+    <img src="{% static 'images/default-user.png' %}" alt="Default User">
+    {% endif %}
+
+        <div>
+            <h3>{{ chat_appointment.patient.name }}</h3>
+            <small>{{ chat_appointment.patient.email }}</small>
+        </div>
+    </div>
+
+    <div class="chat-box">
+        {% for msg in messages %}
+        <div class="msg {{ msg.sender }}">
+            {{ msg.message }}
+            <span>{{ msg.created_at|time:"H:i" }}</span>
+        </div>
+        {% empty %}
+        <div class="msg system">No messages yet. Start the conversation!</div>
+        {% endfor %}
+    </div>
+
+    <form method="POST" class="chat-input">
+        {% csrf_token %}
+        <input type="hidden" name="appointment_id" value="{{ chat_appointment.id }}">
+        <input type="text" name="message" placeholder="Type your message..." required>
+        <button type="submit" name="send_message">Send</button>
+    </form>
+
+    <form method="POST" style="margin-top: 10px;">
+        {% csrf_token %}
+        <input type="hidden" name="appointment_id" value="{{ chat_appointment.id }}">
+        <button type="submit" name="end_chat" class="end-chat-btn">End Chat</button>
+    </form>
+</div>
+{% endif %}
+{% endif %}
+
 
         {% if page == "edit_profile" %}
 
@@ -110,7 +224,7 @@
 {% endif %}
 
 
-{% endif %}
+
     </main>
 
     <!-- ===== RIGHT PROFILE SIDEBAR ===== -->

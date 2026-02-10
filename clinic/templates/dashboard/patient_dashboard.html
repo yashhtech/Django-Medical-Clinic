@@ -71,7 +71,7 @@
         <a href="{% url 'patient_dashboard' %}">🏠 Dashboard</a>
         <a href="{% url 'notifications' %}">🔔 Notifications</a>
         <a href="{% url 'medical_reports' %}">📄 Medical Reports</a>
-        <a href="{% url 'live_chat' %}">💬 Live Chat</a>
+        <a href="/patient_dashboard/?page=p_queries">💬  Prescription Queries</a>
         <a href="{% url 'video_call' %}">🎥 Video Call</a>
         <a href="{% url 'medical_progress' %}">📊 Health Progress</a>
         <a href="{% url 'medical_health' %}">🥗 Medical Health</a>
@@ -224,10 +224,58 @@
 
 
         {% elif section == 'appointments' %}
-        <div class="content-card">
-        <h2>Your Appointments</h2>
-        <p>Your completed appointments will appear here.</p>
-        </div>
+         <div class="appointments-wrapper">
+        <h2 class="appt-heading">Upcoming Appointments</h2>
+
+        {% for appt in upcoming_appointments %}
+          <div class="appt-card">
+         <img src="{{ appt.doctor.image.url }}" class="doctor-img">
+
+         <div class="appt-info">
+           <h3>{{ appt.doctor.name }}</h3>
+           <p>{{ appt.doctor.specialization }}</p>
+           <p class="appt-time">
+            {{ appt.date }} | {{ appt.time }}
+          </p>
+          <span class="status confirmed">Confirmed</span>
+         </div>
+
+        <div class="appt-actions">
+          <a href="?page=schedule&doctor_id={{ appt.doctor.id }}" class="reschedule-btn">
+            Reschedule
+           </a>
+
+          <a href="{% url 'cancel_appointment' appt.id %}" class="cancel-btn">
+             Cancel
+            </a>
+         </div>
+         </div>
+         {% empty %}
+         <p style="color: aliceblue; font-weight: bold;">No upcoming appointments</p>
+         {% endfor %}
+
+
+         <h2 class="appt-heading">Past Appointments</h2>
+
+         {% for appt in past_appointments %}
+         <div class="appt-card past">
+         <img src="{{ appt.doctor.image.url }}" class="doctor-img">
+
+         <div class="appt-info">
+         <h3>{{ appt.doctor.name }}</h3>
+         <p>{{ appt.doctor.specialization }}</p>
+         <p class="appt-time">
+            {{ appt.date }} | {{ appt.time }}
+         </p>
+         <span class="status cancelled">
+         {{ appt.status }}
+         </span>
+         </div>
+         </div>
+         {% empty %}
+         <p style="color: aliceblue; font-weight: bold;">No past appointments</p>
+         {% endfor %}
+         </div>
 
         {% elif section == 'reports' %}
         <div class="content-card">
@@ -235,11 +283,64 @@
         <p>Lab reports & prescriptions.</p>
         </div>
 
-        {% elif section == 'chat' %}
-        <div class="content-card">
-        <h2>Live Chat</h2>
-        <p>Chat with doctor.</p>
+        {% elif section == 'p_queries' %}
+       
+      <div class="query-grid">
+
+      {% for appt in appointments %}
+     <div class="doctor-card">
+    <img src="{{ appt.doctor.image.url|default:'/static/images/default-user.png' }}">
+
+    <h3>Dr. {{ appt.doctor.name }}</h3>
+    <p>{{ appt.doctor.specialization }}</p>
+    <p class="appt">📅 {{ appt.date }} | ⏰ {{ appt.time }}</p>
+
+    <a href="{% url 'patient_dashboard' %}?page=chat&appointment_id={{ appt.id }}"
+       class="chat-btn">
+       💬 Message
+    </a>
+</div>
+{% endfor %}
+
+</div>
+
+
+{% elif section == "chat" and appointment %}
+<div class="chat-wrapper">
+
+    <!-- HEADER -->
+    <div class="chat-header">
+        <img src="{{ doctor.image.url }}" alt="Doctor Image">
+        <div class="chat-header-info">
+            <h3>Dr. {{ doctor.name }}</h3>
+            <small>{{ doctor.specialization }}</small>
         </div>
+    </div>
+
+    <!-- CHAT BODY -->
+    <div class="chat-box">
+        {% for msg in messages %}
+        <div class="msg {{ msg.sender }}">
+            <p>{{ msg.message }}</p>
+            <span>{{ msg.created_at|time:"H:i" }}</span>
+        </div>
+        {% empty %}
+        <p class="no-msg">No messages yet. Say hello!</p>
+        {% endfor %}
+    </div>
+
+    <!-- INPUT FORM -->
+    <form method="POST" class="chat-input">
+        {% csrf_token %}
+        <input type="text" name="message" placeholder="Type your message..." required>
+        <button type="submit">Send</button>
+    </form>
+</div>
+
+
+
+
+
 
         {% elif section == 'video' %}
         <div class="content-card">
@@ -268,6 +369,7 @@
             <li>🛌 Sleep Recommendations</li>
         </ul>
         </div>
+
 
 {% elif section == "schedule" %}
 

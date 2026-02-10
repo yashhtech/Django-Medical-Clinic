@@ -1,5 +1,5 @@
-from django.shortcuts import render, redirect
-from .models import Patient,Contact,Doctor,Newsletter,Appointment
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Patient,Contact,Doctor,Newsletter,Appointment, ChatMessage, ChatThread
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.hashers import check_password
@@ -9,9 +9,10 @@ from .utils import send_auto_reply
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 import calendar
 from datetime import date
+
 
 def home(request):
     return render(request, 'Nav-tab/index.html')
@@ -405,9 +406,18 @@ def custom_logout(request):
     logout(request)
     return redirect('home')
 
-#================================================PATIENT DASHBOARD ============================================
+#=======================PATIENT DASHBOARD =======================
+
+from datetime import date
+import calendar
+from django.shortcuts import render, redirect
+from django.db.models import Q
+from django.contrib import messages
+from .models import Patient, Doctor, Appointment, ChatThread, ChatMessage
+from .utils import send_auto_reply  # your email function
 
 def patient_dashboard(request):
+    # ================= SESSION CHECK =================
     patient_id = request.session.get("patient_id")
     if not patient_id:
         return redirect("login")
@@ -416,9 +426,13 @@ def patient_dashboard(request):
 
     # ================= URL PARAMS =================
     page = request.GET.get("page", "dashboard")
-    specialization = request.GET.get("specialization")
+    appointment_id = request.GET.get("appointment_id")
+    specialization: str | None = request.GET.get("specialization")
     query = request.GET.get("q", "")
-    doctor_id = request.GET.get("doctor_id")
+    doctor_id_raw = request.GET.get("doctor_id")
+    doctor_id: int | None = int(doctor_id_raw) if doctor_id_raw else None
+    open_chat_id_raw = request.GET.get("open_chat_id")
+    open_chat_id: int | None = int(open_chat_id_raw) if open_chat_id_raw else None
 
     # ================= DEFAULTS =================
     section = page
@@ -427,11 +441,33 @@ def patient_dashboard(request):
     selected_date = None
     selected_time = None
 
+    # For appointments page
+    upcoming_appointments = []
+    past_appointments = []
+    selected_appointment = None
+    chat_messages = None
+
+    # ================= COMMON DATA =================
+    today = date.today()
+    time_slots = ["12:00 am", "12:30 am", "1:00 am", "1:30 am",
+                  "2:00 am", "2:30 am", "3:00 am", "3:30 am",
+                  "4:00 am", "4:30 am"]
+
+    # ================= CONTEXT INITIALIZATION =================
     context = {
         "patient": patient,
         "section": section,
         "query": query,
         "selected_specialization": specialization,
+        "doctors": doctors,
+        "doctor": doctor,
+        "selected_date": selected_date,
+        "selected_time": selected_time,
+        "upcoming_appointments": upcoming_appointments,
+        "past_appointments": past_appointments,
+        "selected_appointment": selected_appointment,
+        "chat_messages": chat_messages,
+        "open_chat_id": open_chat_id,
     }
 
     # =================================================
@@ -443,31 +479,128 @@ def patient_dashboard(request):
     # =================================================
     # 2️⃣ BOOK APPOINTMENT (DOCTOR LIST)
     # =================================================
-    elif page == "book":
+    if page == "book":
         doctors = Doctor.objects.all()
-
         if query:
             doctors = doctors.filter(
-            Q(name__icontains=query) |
-            Q(specialization__icontains=query) |
-            Q(qualification__icontains=query) |
-            Q(bio__icontains=query) |
-            Q(experience__icontains=query)
-        ).distinct()
+                Q(name__icontains=query) |
+                Q(specialization__icontains=query) |
+                Q(qualification__icontains=query) |
+                Q(bio__icontains=query) |
+                Q(experience__icontains=query)
+            ).distinct()
+
+        # Calendar defaults
+        today = date.today()
+        month = int(request.GET.get("month", today.month))
+        year = int(request.GET.get("year", today.year))
+
+        if month < 1:
+            month = 12
+            year -= 1
+        elif month > 12:
+            month = 1
+            year += 1
+
+        cal = calendar.Calendar(calendar.SUNDAY)
+        month_days = cal.monthdayscalendar(year, month)
+
+        # Default time slots
+        time_slots = [
+            "12:00 am", "12:30 am",
+            "1:00 am", "1:30 am",
+            "2:00 am", "2:30 am",
+            "3:00 am", "3:30 am",
+            "4:00 am", "4:30 am",
+        ]
 
         context.update({
-        "section": "book",
-        "doctors": doctors,
-        "query": query,
-    })
+            "section": "book",
+            "doctors": doctors,
+            "query": query,
+            "month": month,
+            "year": year,
+            "month_name": calendar.month_name[month],
+            "month_days": month_days,
+            "time_slots": time_slots,
+        })
         return render(request, "dashboard/patient_dashboard.html", context)
 
     # =================================================
-    # 3️⃣ SPECIALIZATION FILTER
+    # 3️⃣ APPOINTMENTS
     # =================================================
-    elif specialization:
-        doctors = Doctor.objects.filter(specialization=specialization)
+    if page == "appointments":
+         upcoming_appointments = Appointment.objects.filter(
+             patient=patient,
+             date__gte=today,
+             status="Confirmed"
+         ).select_related("doctor").order_by("date", "time")
 
+         past_appointments = Appointment.objects.filter(
+             patient=patient
+         ).exclude(
+           date__gte=today,
+           status="Confirmed"
+         ).select_related("doctor").order_by("-date", "-time")
+
+    # No chat logic here at all
+
+         context.update({
+           "section": "appointments",
+           "upcoming_appointments": upcoming_appointments,
+           "past_appointments": past_appointments,
+         })
+         return render(request, "dashboard/patient_dashboard.html", context)
+    
+
+    # ================= PRESCRIPTION QUERIES =================
+    if page == "p_queries":
+        appointments = (
+            Appointment.objects
+            .filter(patient=patient, status="Confirmed")
+            .select_related("doctor")
+        )
+
+        context["appointments"] = appointments
+        context.update({
+         "section": "p_queries",
+         "appointments": appointments
+         })
+
+        return render(request, "dashboard/patient_dashboard.html", context)
+
+    # ================= CHAT =================
+    if page == "chat" and appointment_id:
+        appointment = Appointment.objects.get(
+            id=appointment_id, patient=patient
+        )
+
+        thread, _ = ChatThread.objects.get_or_create(
+            appointment=appointment
+        )
+
+        if request.method == "POST":
+            text = request.POST.get("message")
+            if text:
+                ChatMessage.objects.create(
+                    thread=thread,
+                    sender="patient",
+                    message=text
+                )
+            return redirect(f"/patient_dashboard/?page=chat&appointment_id={appointment.id}")
+
+        context.update({
+            "appointment": appointment,
+            "doctor": appointment.doctor,
+            "messages": thread.messages.all()
+        })
+        return render(request, "dashboard/patient_dashboard.html", context)
+
+    # =================================================
+    # 4️⃣ SPECIALIZATION FILTER
+    # =================================================
+    if specialization:
+        doctors = Doctor.objects.filter(specialization=specialization)
         context.update({
             "section": "specialization",
             "doctors": doctors,
@@ -476,11 +609,10 @@ def patient_dashboard(request):
         return render(request, "dashboard/patient_dashboard.html", context)
 
     # =================================================
-    # 4️⃣ SCHEDULE PAGE
+    # 5️⃣ SCHEDULE PAGE
     # =================================================
-    elif page == "schedule" and doctor_id:
+    if page == "schedule" and doctor_id:
         doctor = Doctor.objects.get(id=doctor_id)
-
         today = date.today()
         month = int(request.GET.get("month", today.month))
         year = int(request.GET.get("year", today.year))
@@ -520,15 +652,15 @@ def patient_dashboard(request):
         return render(request, "dashboard/patient_dashboard.html", context)
 
     # =================================================
-    # 5️⃣ BOOKING CONFIRM PAGE
+    # 6️⃣ BOOKING CONFIRMATION
     # =================================================
-    elif page == "booking" and doctor_id:
+    if page == "booking" and doctor_id:
         doctor = Doctor.objects.get(id=doctor_id)
         selected_date = request.GET.get("date")
         selected_time = request.GET.get("time")
 
         if request.method == "POST":
-            Appointment.objects.create(
+            appointment = Appointment.objects.create(
                 patient=patient,
                 doctor=doctor,
                 date=selected_date,
@@ -541,6 +673,7 @@ def patient_dashboard(request):
                 amount=300,
                 status="Confirmed"
             )
+            ChatThread.objects.create(appointment=appointment)
 
             send_auto_reply(
                 email=patient.email,
@@ -555,11 +688,35 @@ def patient_dashboard(request):
                 Time: {selected_time}
 
                 Thank you!
+                Medical Clinic
+                """
+            )
+
+            send_auto_reply(
+                email=doctor.email,
+                subject="📅 New Appointment Booked",
+                message=f"""
+                Hello Dr. {doctor.name},
+
+                A new appointment has been booked.
+
+                Patient Name: {appointment.first_name} {appointment.last_name}
+                Patient Email: {appointment.email}
+                Phone: {appointment.phone}
+
+                Date: {appointment.date}
+                Time: {appointment.time}
+
+                Patient Message:
+                {appointment.message}
+
+                Regards,
+                Medical Clinic System
                 """
             )
 
             messages.success(request, "Appointment booked successfully ✅")
-            return redirect("patient_dashboard")
+            return redirect("/patient_dashboard/?page=appointments")
 
         context.update({
             "section": "booking",
@@ -570,9 +727,31 @@ def patient_dashboard(request):
         return render(request, "dashboard/patient_dashboard.html", context)
 
     # =================================================
-    # FALLBACK
+    # 7️⃣ FALLBACK
     # =================================================
     return render(request, "dashboard/patient_dashboard.html", context)
+
+
+
+def cancel_appointment(request, id):
+    patient_id = request.session.get("patient_id")
+    if not patient_id:
+        return redirect("login")
+
+    appointment = get_object_or_404(
+        Appointment,
+        id=id,
+        patient_id=patient_id
+    )
+
+    appointment.status = "Cancelled"
+    appointment.save()
+
+    messages.success(request, "Appointment cancelled")
+
+    return redirect("/patient_dashboard/?page=appointments")
+
+
 
 
 
@@ -584,12 +763,8 @@ def medical_reports(request):
     })
 
 
-def live_chat(request):
-    patient = Patient.objects.get(user=request.user)
-    return render(request, 'dashboard/patient_dashboard.html', {
-        'patient': patient,
-        'section': 'chat'
-    })
+
+
 
 
 def video_call(request):
@@ -624,30 +799,140 @@ def medical_health(request):
     })
 
 
+
+def chat_room(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id)
+
+    # security
+    if request.session.get("patient_id"):
+        if appointment.patient.id != request.session["patient_id"]:
+            return redirect("patient_dashboard")
+        sender = "patient"
+
+    elif request.session.get("doctor_id"):
+        if appointment.doctor.id != request.session["doctor_id"]:
+            return redirect("doctor_dashboard")
+        sender = "doctor"
+
+    else:
+        return redirect("login")
+
+    thread = appointment.chat
+    messages = thread.messages.order_by("created_at")
+
+    if request.method == "POST":
+        ChatMessage.objects.create(
+            thread=thread,
+            sender=sender,
+            message=request.POST.get("message")
+        )
+        return redirect("chat_room", appointment_id=appointment.id)
+
+    return render(request, "chat/chat_room.html", {
+        "appointment": appointment,
+        "messages": messages,
+        "sender": sender
+    })
+
+
+
+
+from clinic.models import Appointment
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .models import Doctor, Appointment, ChatThread, ChatMessage
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from django.contrib import messages
+
 def doctor_dashboard(request):
     if not request.session.get("doctor_id"):
         return redirect("login")
 
-    doctor = Doctor.objects.get(id=request.session["doctor_id"])
+    doctor = get_object_or_404(Doctor, id=request.session["doctor_id"])
 
-    if request.method == "POST":
-        doctor.bio = request.POST.get("bio")
-        doctor.qualification = request.POST.get("qualification")
-        doctor.hobbies = request.POST.get("hobbies")
+    page = request.GET.get("page", "appointments")
+    open_chat_id = request.GET.get("open_chat_id")
 
-        if request.FILES.get("image"):
-            doctor.image = request.FILES.get("image")
+    # ================= APPOINTMENTS =================
+    appointments = Appointment.objects.filter(
+        doctor=doctor,
+        status="Confirmed"
+    ).select_related("patient").order_by("-date", "-time")
 
-        doctor.is_profile_completed = True
-        doctor.save()
+    chat_appointment = None
+    messages_list = []
 
-        messages.success(request, "Profile completed successfully")
-        return redirect("doctor_dashboard")
+    # ================= OPEN CHAT =================
+    if open_chat_id:
+        chat_appointment = get_object_or_404(
+            Appointment,
+            id=open_chat_id,
+            doctor=doctor
+        )
 
-    page = request.GET.get("page", "home")
+        thread, _ = ChatThread.objects.get_or_create(
+            appointment=chat_appointment,
+            is_active=True
+        )
+
+        messages_list = thread.messages.all().order_by("created_at")
+
+    # ================= SEND MESSAGE =================
+    if request.method == "POST" and "send_message" in request.POST:
+        appointment_id = request.POST.get("appointment_id")
+        text = request.POST.get("message")
+
+        appointment = get_object_or_404(
+            Appointment,
+            id=appointment_id,
+            doctor=doctor
+        )
+
+        thread, _ = ChatThread.objects.get_or_create(
+            appointment=appointment,
+            is_active=True
+        )
+
+        ChatMessage.objects.create(
+            thread=thread,
+            sender="doctor",
+            message=text
+        )
+
+        return redirect(
+            reverse("doctor_dashboard")
+            + f"?page=prescriptions&open_chat_id={appointment.id}"
+        )
+
+    # ================= END CHAT =================
+    if request.method == "POST" and "end_chat" in request.POST:
+        appointment_id = request.POST.get("appointment_id")
+
+        appointment = get_object_or_404(
+            Appointment,
+            id=appointment_id,
+            doctor=doctor
+        )
+
+        ChatThread.objects.filter(
+            appointment=appointment,
+            is_active=True
+        ).delete()   # 🔥 poora chat clear
+
+        messages.success(request, "Chat ended and cleared successfully")
+
+        return redirect(
+            reverse("doctor_dashboard") + "?page=prescriptions"
+        )
 
     return render(request, "dashboard/doctor_dashboard.html", {
         "doctor": doctor,
-        "page": page
+        "page": page,
+        "appointments": appointments,
+        "open_chat_id": int(open_chat_id) if open_chat_id else None,
+        "chat_appointment": chat_appointment,
+        "messages": messages_list
     })
-
+ 
